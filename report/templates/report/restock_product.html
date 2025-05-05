@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="restock-page">
+    <h1 class="restock-heading">Restock {{ product.name }}</h1>
+    
+    <form method="post" class="restock-form">
+        {% csrf_token %}
+        <div class="restock-form-group">
+            <label class="restock-label">Quantity to Add:</label>
+            <input type="number" name="quantity" min="1" required class="restock-input">
+        </div>
+        <button type="submit" class="restock-submit-btn">Add Stock</button>
+    </form>
+
+    <a href="{% url 'inventory_reports' %}" class="restock-back-link">← Back to Inventory</a>
+</div>
+
+<style>
+    .restock-page {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 1rem;
+        font-family: Arial, sans-serif;
+    }
+    
+    .restock-heading {
+        color: #333;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .restock-form {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .restock-form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .restock-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .restock-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .restock-submit-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: #4361ee;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    
+    .restock-submit-btn:hover {
+        background: #3a56d4;
+    }
+    
+    .restock-back-link {
+        display: block;
+        text-align: center;
+        color: #4361ee;
+        text-decoration: none;
+    }
+    
+    .restock-back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Financial Reports</h1>
+
+<div class="financial-sections">
+    <!-- Summary Section -->
+    <section class="financial-section">
+        <h2>Financial Summary</h2>
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Revenue</h3>
+                <p>Rs {{ revenue|floatformat:2 }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Cost of Goods Sold</h3>
+                <p>Rs {{ cogs|floatformat:2 }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Gross Profit</h3>
+                <p>Rs {{ gross_profit|floatformat:2 }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Gross Margin</h3>
+                <p>{{ margin|floatformat:2 }}%</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revenue by Brand -->
+    <section class="financial-section">
+        <h2>Revenue by Brand</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Brand</th>
+                    <th>Revenue</th>
+                    <th>% of Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for brand in revenue_by_brand %}
+                <tr>
+                    <td>{{ brand.product__brand__name }}</td>
+                    <td>Rs {{ brand.revenue|floatformat:2 }}</td>
+                    <td>{{ brand.percentage|floatformat:2 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Profitability by Product -->
+    <section class="financial-section">
+        <h2>Top Profitable Products</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Revenue</th>
+                    <th>COGS</th>
+                    <th>Profit</th>
+                    <th>Margin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in profitable_products %}
+                <tr>
+                    <td>{{ product.product__name }}</td>
+                    <td>Rs {{ product.revenue|floatformat:2 }}</td>
+                    <td>Rs {{ product.cogs|floatformat:2 }}</td>
+                    <td>Rs {{ product.profit|floatformat:2 }}</td>
+                    <td>{{ product.margin|floatformat:2 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<style>
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .summary-card {
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        text-align: center;
+    }
+    .summary-card h3 {
+        margin-top: 0;
+        color: #555;
+    }
+    .summary-card p {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0;
+    }
+    .financial-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #eee;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}

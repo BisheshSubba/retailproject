@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="inventory-container">
+    <h1><i class="fas fa-boxes"></i> Inventory Management</h1>
+
+    <section class="inventory-section">
+        <div class="section-header">
+            <h2><i class="fas fa-clipboard-list"></i> Current Inventory</h2>
+            <form method="GET" action="{% url 'inventory_reports' %}" class="search-filter-form">
+                <input type="text" name="search" placeholder="Search products..." class="search-input" value="{{ request.GET.search }}">
+                <select class="filter-select" name="category" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}" {% if request.GET.category == category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Supplier</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Stock Value</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="product-info">
+                                <div class="product-color" style="background-color: {{ product.color_code|default:'#6c757d' }};"></div>
+                                {{ product.name }}
+                            </div>
+                        </td>
+                        <td>{{ product.supplier.name }}</td>
+                        <td><span class="category-badge">{{ product.category }}</span></td>
+                        <td>{{ product.quantity }}</td>
+                        <td>Rs. {{ product.price }}</td>
+                        <td>Rs. {{ product.get_stock_value|floatformat:2 }}</td>
+                        <td>
+                            {% if product.quantity < 10 %}
+                            <span class="status-badge danger">Low</span>
+                            {% elif product.quantity > 100 %}
+                            <span class="status-badge warning">High</span>
+                            {% else %}
+                            <span class="status-badge success">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'restock_product' product.id %}" class="btn-action" title="Restock">
+                                <i class="fas fa-arrow-up"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <div class="showing-entries">
+                Showing 1 to {{ products.count }} of {{ products.count }} entries
+            </div>
+        </div>
+    </section>
+
+    <div class="inventory-sections">
+        <section class="report-section">
+            <div class="section-header">
+                <h2><i class="fas fa-exclamation-circle"></i> Low Stock Alerts (Below 10)</h2>
+            </div>
+            {% if low_stock %}
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Current Quantity</th>
+                            <th>Last Restock</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td><span class="category-badge">{{ product.category }}</span></td>
+                            <td><span class="badge danger">{{ product.quantity }}</span></td>
+                            <td>{{ product.restock_set.latest.restock_date|date:"Y-m-d" }}</td>
+                            <td>
+                                <a href="{% url 'restock_product' product.id %}" class="btn btn-sm btn-primary">Restock</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No low stock items currently.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="report-section">
+            <div class="section-header">
+                <h2><i class="fas fa-archive"></i> Overstock Items (Above 100)</h2>
+            </div>
+            {% if overstock %}
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Current Quantity</th>
+                            <th>Days Since Last Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in overstock %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td><span class="category-badge">{{ product.category }}</span></td>
+                            <td><span class="badge warning">{{ product.quantity }}</span></td>
+                            <td>{{ product.days_since_last_sale_display }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No overstock items currently.</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<style>
+    .inventory-container {
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    h2 {
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .inventory-section, .report-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    .section-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .search-filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin: 0;  /* Ensure no margin around the form */
+        padding: 0;  /* Remove any default padding */
+        border: none;  /* Remove border if any */
+        background: none;  /* No background for form */
+    }
+    
+    .search-input,
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #fff;
+        margin: 0; /* Remove margin */
+        outline: none;  /* Remove focus outline if desired */
+    }
+    
+    .search-input:focus,
+    .filter-select:focus {
+        border-color: #4361ee; /* Optional: to highlight the input */
+    }
+    
+    
+    .search-input {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-width: 200px;
+    }
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .inventory-table, .report-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .inventory-table th, .report-table th {
+        padding: 1rem;
+        text-align: left;
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .inventory-table td, .report-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .product-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: #f0f5ff;
+        color: #4361ee;
+        border-radius: 20px;
+        font-size: 0.75rem;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-badge.success {
+        background-color: #e6f7ee;
+        color: #00a854;
+    }
+    .status-badge.warning {
+        background-color: #fff7e6;
+        color: #fa8c16;
+    }
+    .status-badge.danger {
+        background-color: #fff1f0;
+        color: #f5222d;
+    }
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    .btn-action:hover {
+        background-color: #e9ecef;
+    }
+    .table-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #eee;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25em 0.6em;
+        font-size: 0.75em;
+        font-weight: 700;
+        color: white;
+        border-radius: 10px;
+    }
+    .badge.danger {
+        background-color: #f5222d;
+    }
+    .badge.warning {
+        background-color: #fa8c16;
+    }
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-primary {
+        background-color: #4361ee;
+        color: white;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}

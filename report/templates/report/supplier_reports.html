@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Supplier Performance Reports</h1>
+
+<div class="supplier-sections">
+    <section class="supplier-section">
+        <h2>Supplier Performance</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Total Restocks</th>
+                    <th>Total Products</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in supplier_performance %}
+                <tr>
+                    <td>{{ supplier.name }}</td>
+                    <td>{{ supplier.total_restocks }}</td>
+                    <td>{{ supplier.total_products }}</td>
+                    <td>
+                        {% if supplier.total_restocks > 10 %}
+                            ★★★★★
+                        {% elif supplier.total_restocks > 5 %}
+                            ★★★★
+                        {% elif supplier.total_restocks > 0 %}
+                            ★★★
+                        {% else %}
+                            Not rated
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section class="supplier-section">
+        <h2>Supplier Cost Analysis</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Supplier</th>
+                    <th>Avg. Product Price</th>
+                    <th>Most Supplied Brand</th>
+                    <th>Last Restock Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for supplier in supplier_cost_analysis %}
+                <tr>
+                    <td>{{ supplier.name }}</td>
+                    <td>Rs {{ supplier.avg_price|floatformat:2 }}</td>
+                    <td>{{ supplier.top_brand|default:"N/A" }}</td>
+                    <td>{{ supplier.last_restock|date:"Y-m-d"|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<style>
+    .supplier-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #eee;
+        border-radius: 5px;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table th, .table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .table th {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

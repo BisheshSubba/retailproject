@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="add-product-page" class="container">
+    <div class="page-header">
+        <h1 class="page-title">➕ Add New Product</h1>
+        <p class="page-subtitle">Fill in the details to add a new product to your inventory</p>
+    </div>
+
+    <form method="post" class="product-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <input type="text" name="name" class="form-input" placeholder="e.g. Nike Air Max" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <input type="text" name="category" class="form-input" placeholder="e.g. Running Shoes" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Price (Rs.)</label>
+                <div class="price-input">
+                    <span class="currency">Rs</span>
+                    <input type="number" name="price" step="0.01" class="form-input" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Cost Price (Rs.)</label>
+                <div class="price-input">
+                    <span class="currency">Rs</span>
+                    <input type="number" name="cost_price" step="0.01" class="form-input" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" class="form-input" placeholder="0" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Brand</label>
+                <select name="brand" class="form-select" required>
+                    <option value="" disabled selected>Select a brand</option>
+                    {% for brand in brands %}
+                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Supplier</label>
+                <select name="supplier" class="form-select" required>
+                    <option value="" disabled selected>Select a supplier</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label">Product Image</label>
+                <div class="file-upload">
+                    <label class="upload-label">
+                        <input type="file" name="image" class="file-input" accept="image/*">
+                        <span class="upload-text">Choose an image or drag & drop here</span>
+                        <span class="upload-hint">JPEG, PNG (Max 5MB)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Add Product</button>
+            <a href="{% url 'product_list' %}" class="cancel-btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

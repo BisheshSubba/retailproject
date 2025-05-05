@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="sales-page">
+    <h1 class="sales-header">Product Catalog</h1>
+
+    <form method="get" action="{% url 'sales' %}" class="sales-form">
+        {% csrf_token %}
+        <input type="text" name="search" placeholder="Search by title, brand, or category" value="{{ request.GET.search }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="product-list">
+        {% for product in products %}
+            <div class="product-card">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                <h3>{{ product.name }}</h3>
+                <p>Brand: {{ product.brand.name }}</p>
+                <p>Category: {{ product.category }}</p>
+                <p>Price: Rs {{ product.price }}</p>
+                <p>In Stock: {{ product.quantity }}</p>
+                <input type="number" name="quantity_{{ product.id }}" min="1" max="{{ product.quantity }}" placeholder="Quantity">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <button class="add-to-cart-btn" data-product-id="{{ product.id }}">Add</button>
+            </div>
+        {% empty %}
+            <div class="no-products">No products found matching your search.</div>
+        {% endfor %}
+    </div>
+
+    <div class="selected-items-section">
+        <h3>Selected Items</h3>
+        <div id="selected-items-container"></div>
+        <div class="total-section">
+            <h4>Total: Rs <span id="total-amount">0.00</span></h4>
+        </div>
+        <button id="sell-btn" class="btn-primary">Complete Sale</button>
+    </div>
+</div>
+
+<script>
+    const selectedItems = [];
+    let totalAmount = 0;
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const productCard = event.target.closest('.product-card');
+            const productId = event.target.getAttribute('data-product-id');
+            const quantityInput = productCard.querySelector('input[type="number"]');
+            const quantity = parseInt(quantityInput.value);
+            const maxQuantity = parseInt(quantityInput.getAttribute('max'));
+            const price = parseFloat(productCard.querySelector('p:nth-of-type(3)').innerText.replace('Price: Rs ', ''));
+            
+            if (quantity > 0 && quantity <= maxQuantity) {
+                const existingItemIndex = selectedItems.findIndex(item => item.productId === productId);
+                
+                if (existingItemIndex >= 0) {
+                    selectedItems[existingItemIndex].quantity += quantity;
+                    const existingItemDiv = document.querySelector(`.selected-item[data-product-id="${productId}"]`);
+                    existingItemDiv.querySelector('.item-quantity').textContent = `x${selectedItems[existingItemIndex].quantity}`;
+                    existingItemDiv.querySelector('.item-total').textContent = `Rs ${(selectedItems[existingItemIndex].price * selectedItems[existingItemIndex].quantity).toFixed(2)}`;
+                } else {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('selected-item');
+                    itemDiv.setAttribute('data-product-id', productId);
+                    itemDiv.innerHTML = `
+                        <img src="${productCard.querySelector('img').src}" alt="Product Image" class="selected-item-image">
+                        <span class="item-name">${productCard.querySelector('h3').innerText}</span>
+                        <span class="item-price">Rs ${price.toFixed(2)}</span>
+                        <span class="item-quantity">x${quantity}</span>
+                        <span class="item-total">Rs ${(price * quantity).toFixed(2)}</span>
+                        <button class="remove-item-btn">Remove</button>
+                    `;
+                    document.getElementById('selected-items-container').appendChild(itemDiv);
+                    selectedItems.push({ productId, quantity, price });
+                }
+
+                totalAmount += price * quantity;
+                document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+
+                quantityInput.value = '';
+            } else {
+                alert(`Please enter a valid quantity (1-${maxQuantity})`);
+            }
+        });
+    });
+
+    document.getElementById('selected-items-container').addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-item-btn')) {
+            const itemDiv = event.target.closest('.selected-item');
+            const productId = itemDiv.getAttribute('data-product-id');
+            const quantity = parseInt(itemDiv.querySelector('.item-quantity').textContent.replace('x', ''));
+            const price = parseFloat(itemDiv.querySelector('.item-price').textContent.replace('Rs ', ''));
+            const itemIndex = selectedItems.findIndex(item => item.productId === productId);
+            if (itemIndex >= 0) {
+                totalAmount -= selectedItems[itemIndex].price * selectedItems[itemIndex].quantity;
+                selectedItems.splice(itemIndex, 1);
+                document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+                itemDiv.remove();
+            }
+        }
+    });
+
+    document.getElementById('sell-btn').addEventListener('click', () => {
+        if (selectedItems.length === 0) {
+            alert('Please select at least one product.');
+            return;
+        }
+
+        const sellBtn = document.getElementById('sell-btn');
+        sellBtn.disabled = true;
+        sellBtn.textContent = 'Processing...';
+
+        fetch("{% url 'sales' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 
+                selected_items: selectedItems,
+                total_amount: totalAmount
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{% url 'sales_receipt' %}?sale_ids=" + 
+                    data.sale_ids.join(',') + "&total=" + data.total_amount;
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the sale.');
+        })
+        .finally(() => {
+            sellBtn.disabled = false;
+            sellBtn.textContent = 'Complete Sale';
+        });
+    });
+</script>
+{% endblock %}

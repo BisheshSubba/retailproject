@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="salesreport-container">
+    <div class="salesreport-header">
+        <div class="salesreport-header-text">
+            <h1 class="salesreport-title">
+                <i class="fas fa-chart-line"></i> Sales Reports
+            </h1>
+            <p class="salesreport-subtitle">
+                Showing data from 
+                {% if time_period == 'week' %}
+                    the last 7 days
+                {% elif time_period == 'month' %}
+                    the last 30 days
+                {% else %}
+                    the last year
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="salesreport-period-filters">
+            <a href="?period=week" class="salesreport-period-btn {% if time_period == 'week' %}active{% endif %}">
+                <i class="fas fa-calendar-week"></i> Weekly
+            </a>
+            <a href="?period=month" class="salesreport-period-btn {% if time_period == 'month' %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i> Monthly
+            </a>
+            <a href="?period=year" class="salesreport-period-btn {% if time_period == 'year' %}active{% endif %}">
+                <i class="fas fa-calendar-year"></i> Yearly
+            </a>
+        </div>
+    </div>
+
+    <div class="salesreport-table-container">
+        <table class="salesreport-table">
+            <thead>
+                <tr>
+                    <th class="salesreport-product-col">Product</th>
+                    <th class="salesreport-brand-col">Brand</th>
+                    <th class="salesreport-units-col">Units Sold</th>
+                    <th class="salesreport-revenue-col">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sales_data %}
+                <tr class="salesreport-data-row">
+                    <td class="salesreport-product-cell">
+                        {{ item.product__name }}
+                    </td>
+                    <td class="salesreport-brand-cell">
+                        <span class="salesreport-brand-highlight">{{ item.product__brand__name }}</span>
+                    </td>
+                    <td class="salesreport-units-cell">
+                        {{ item.total_sold }}
+                    </td>
+                    <td class="salesreport-revenue-cell">
+                        Rs {{ item.total_revenue|floatformat:2 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="salesreport-empty-row">
+                    <td colspan="4">
+                        <div class="salesreport-empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>No sales data available for this period</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.salesreport-container {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    color: #2d3748;
+}
+
+.salesreport-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.salesreport-header-text {
+    flex: 1;
+    min-width: 300px;
+}
+
+.salesreport-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a237e;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.salesreport-title i {
+    font-size: 1.8rem;
+    color: #3949ab;
+}
+
+.salesreport-subtitle {
+    color: #4a5568;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
+
+.salesreport-period-filters {
+    display: flex;
+    gap: 0.75rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.salesreport-period-btn {
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    background: transparent;
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.salesreport-period-btn:hover {
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+.salesreport-period-btn.active {
+    background: #1a237e;
+    color: white;
+    box-shadow: 0 2px 6px rgba(26, 35, 126, 0.2);
+}
+
+.salesreport-period-btn i {
+    font-size: 0.9rem;
+}
+
+.salesreport-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+    padding: 1px;
+}
+
+.salesreport-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.salesreport-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.salesreport-table th {
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.salesreport-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.salesreport-data-row:hover {
+    background-color: #f8fafc;
+}
+
+.salesreport-brand-highlight {
+    font-weight: 600;
+    color: #5a67d8;
+    position: relative;
+    padding-left: 0.75rem;
+}
+
+.salesreport-brand-highlight::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    background-color: #5a67d8;
+    border-radius: 2px;
+}
+
+.salesreport-empty-row td {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.salesreport-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #a0aec0;
+}
+
+.salesreport-empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.5;
+}
+
+.salesreport-empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 992px) {
+    .salesreport-container {
+        padding: 1.5rem 1rem;
+    }
+    
+    .salesreport-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+    
+    .salesreport-period-filters {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .salesreport-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .salesreport-period-btn {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .salesreport-period-btn i {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

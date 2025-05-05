@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <h1><i class="fas fa-chart-line"></i> Executive Dashboard</h1>
+    </header>
+
+    <div class="metric-row">
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="metric-content">
+                <h3>Total Products</h3>
+                <p>{{ total_products }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+            <div class="metric-content">
+                <h3>Total Sales</h3>
+                <p>Rs {{ total_sales|floatformat:2 }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="metric-content">
+                <h3>Low Stock Items</h3>
+                <p>{{ low_stock }}</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="metric-content">
+                <h3>Top Brand</h3>
+                <p>{{ top_brand }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-sales">
+        <h2><i class="fas fa-history"></i> Recent Sales</h2>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in recent_sales %}
+                    <tr>
+                        <td>{{ sale.product.name }}</td>
+                        <td>{{ sale.quantity_sold }}</td>
+                        <td>Rs {{ sale.sale_price }}</td>
+                        <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    padding: 20px;
+    max-width: 100%;
+    font-size: 16px; 
+}
+
+.dashboard-header {
+    margin-bottom: 25px;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem; 
+    margin: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 100px;
+}
+
+.metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.metric-card:nth-child(1) .metric-icon { background-color: #3498db; }
+.metric-card:nth-child(2) .metric-icon { background-color: #2ecc71; }
+.metric-card:nth-child(3) .metric-icon { background-color: #f39c12; }
+.metric-card:nth-child(4) .metric-icon { background-color: #9b59b6; }
+
+.metric-content h3 {
+    margin: 0;
+    font-size: 1rem; 
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.metric-content p {
+    margin: 5px 0 0;
+    font-size: 1.5rem; 
+    font-weight: 600;
+}
+
+.recent-sales {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.recent-sales h2 {
+    font-size: 1.5rem; 
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scrollable-table {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+
+th {
+    text-align: left;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    color: #7f8c8d;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    font-size: 1.05rem; 
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+@media (max-width: 768px) {
+    .metric-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard {
+        padding: 15px;
+        font-size: 15px;
+    }
+    
+    .metric-content p {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .metric-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.7rem;
+    }
+    
+    .recent-sales h2 {
+        font-size: 1.3rem;
+    }
+    
+    table {
+        font-size: 0.95rem;
+    }
+}
+</style>
+{% endblock %}

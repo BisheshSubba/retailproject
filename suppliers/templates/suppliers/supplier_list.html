@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Supplier List</h1>
+<a href="{% url 'add_supplier' %}" class="add-supplier-btn">+ Add New Supplier</a>
+<ul id="supplier-list">
+  {% for supplier in suppliers %}
+    <li class="supplier-item">
+      <div class="supplier-info">
+        <h3>{{ supplier.name }}</h3>
+        <p><strong>Contact:</strong> {{ supplier.contact_info }}</p>
+        <p><strong>Address:</strong> {{ supplier.address }}</p>
+      </div>
+      <div class="supplier-actions">
+        <a href="{% url 'update_supplier' supplier.id %}" id="edit-supplier-btn-{{ supplier.id }}">Edit</a>
+        <a href="{% url 'delete_supplier' supplier.id %}" id="delete-supplier-btn-{{ supplier.id }}">Delete</a>        
+      </div>
+    </li>
+  {% empty %}
+    <li>No suppliers found.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

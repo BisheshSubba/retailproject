@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="update-product-page" class="container">
+    <div class="page-header">
+        <h1 class="page-title">✏️ Update Product</h1>
+        <p class="page-subtitle">Edit details for {{ product.name }}</p>
+    </div>
+
+    <form method="post" class="product-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+            <!-- Row 1 -->
+            <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <input type="text" name="name" class="form-input" value="{{ product.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <input type="text" name="category" class="form-input" value="{{ product.category }}" required>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="form-group">
+                <label class="form-label">Price (Rs.)</label>
+                <div class="price-input">
+                    <span class="currency">Rs</span>
+                    <input type="number" name="price" step="0.01" class="form-input" value="{{ product.price }}" required>
+                </div>
+            </div>
+
+            <!-- New Field: Cost Price -->
+            <div class="form-group">
+                <label class="form-label">Cost Price (Rs.)</label>
+                <div class="price-input">
+                    <span class="currency">Rs</span>
+                    <input type="number" name="cost_price" step="0.01" class="form-input" value="{{ product.cost_price }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" name="quantity" class="form-input" value="{{ product.quantity }}" required>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="form-group">
+                <label class="form-label">Brand</label>
+                <select name="brand" class="form-select" required>
+                    {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if brand.id == product.brand.id %}selected{% endif %}>
+                            {{ brand.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Supplier</label>
+                <select name="supplier" class="form-select" required>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if supplier.id == product.supplier.id %}selected{% endif %}>
+                            {{ supplier.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Full width row -->
+            <div class="form-group full-width">
+                <label class="form-label">Product Image</label>
+                <div class="image-upload-container">
+                    <div class="file-upload">
+                        <label class="upload-label">
+                            <input type="file" name="image" class="file-input" accept="image/*">
+                            <span class="upload-text">Choose new image or drag & drop</span>
+                            <span class="upload-hint">JPEG, PNG (Max 5MB)</span>
+                        </label>
+                    </div>
+                    {% if product.image %}
+                    <div class="current-image">
+                        <p class="current-image-label">Current Image:</p>
+                        <img src="{{ product.image.url }}" alt="Current Product Image" class="product-thumbnail">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Update Product</button>
+            <a href="{% url 'product_list' %}" class="cancel-btn">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

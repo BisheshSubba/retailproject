@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="sales-container">
+    <div class="sales-header">
+        <h1 class="sales-title">
+            <i class="fas fa-receipt"></i> Sales History
+        </h1>
+        <div class="header-actions">
+            <form method="get" class="inline-filter">
+                <select name="sort" onchange="this.form.submit()">
+                    <option value="-sale_date" {% if request.GET.sort == '-sale_date' %}selected{% endif %}>Latest First</option>
+                    <option value="sale_date" {% if request.GET.sort == 'sale_date' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <div class="sales-card">
+        <div class="table-responsive">
+            <table class="sales-table">
+                <thead>
+                    <tr>
+                        <th class="product-col">Product</th>
+                        <th class="quantity-col">Quantity</th>
+                        <th class="price-col">Price</th>
+                        <th class="date-col">Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in page_obj %}
+                    <tr class="sales-row">
+                        <td class="product-cell">
+                            <div class="product-info">
+                                {% if sale.product.image %}
+                                <img src="{{ sale.product.image.url }}" alt="{{ sale.product.name }}" class="product-thumb">
+                                {% endif %}
+                                <span>{{ sale.product.name }}</span>
+                            </div>
+                        </td>
+                        <td class="quantity-cell">
+                            <span class="quantity-pill">{{ sale.quantity_sold }}</span>
+                        </td>
+                        <td class="price-cell">
+                            <span class="price-badge">Rs {{ sale.sale_price }}</span>
+                        </td>
+                        <td class="date-cell">
+                            <span class="date-badge">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ sale.sale_date|date:"M d, Y H:i" }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-receipt"></i>
+                                <p>No sales records found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.sales-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #333;
+}
+
+.sales-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.sales-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.inline-filter {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+}
+
+.inline-filter select {
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+    padding-right: 1.8rem;
+}
+
+.inline-filter select:focus {
+    outline: none;
+    border-color: #2d3748;
+    box-shadow: 0 0 0 1px rgba(45, 55, 72, 0.2);
+}
+
+.sales-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.sales-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sales-table thead {
+    background-color: #2c3e50;
+}
+
+.sales-table th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 500;
+    color: white;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+.sales-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.sales-row:hover {
+    background-color: #f8fafc;
+}
+
+.product-cell {
+    min-width: 250px;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.product-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
+.quantity-pill {
+    background-color: #e8f5e9;
+    color: #27ae60;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 40px;
+    text-align: center;
+}
+
+.price-badge {
+    background-color: #e8f4fd;
+    color: #2980b9;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.date-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.empty-row td {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #95a5a6;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.pagination {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.pagination a {
+    color: #2d3748;
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    margin: 0 0.25rem;
+    border-radius: 4px;
+}
+
+.pagination a:hover {
+    background-color: #2d3748;
+    color: white;
+}
+
+.pagination .current {
+    padding: 0.5rem 0.75rem;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .sales-container {
+        padding: 1rem;
+    }
+    
+    .sales-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .sales-table th, 
+    .sales-table td {
+        padding: 0.75rem;
+    }
+    
+    .product-cell {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .sales-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .product-info {
+        min-width: 200px;
+    }
+    
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .pagination a {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+}
+</style>
+{% endblock %}

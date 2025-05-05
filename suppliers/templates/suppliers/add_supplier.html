@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Add New Supplier</h1>
+<form method="post" id="add-supplier-form" onsubmit="return validateForm()">
+  {% csrf_token %}
+  <div class="form-group">
+    <label for="supplier-name">Name:</label>
+    <input type="text" id="supplier-name" name="name" required>
+  </div>
+  <div class="form-group">
+    <label for="supplier-contact">Contact Info (Starts from 98, 10 words):</label>
+    <input type="text" id="supplier-contact" name="contact_info" required>
+  </div>
+  <div class="form-group">
+    <label for="supplier-address">Address:</label>
+    <input type="text" id="supplier-address" name="address" required>
+  </div>
+  <button type="submit" id="add-supplier-btn">Add Supplier</button>
+</form>
+
+<script>
+  function validateForm() {
+    var contactInfo = document.getElementById('supplier-contact').value;
+
+    var regex = /^98\d{8}$/;
+
+    if (!regex.test(contactInfo)) {
+      alert("Please make sure the contact info starts with '98' and contains exactly 10 digits.");
+      return false;
+    }
+    
+    return true; 
+  }
+</script>
+
+{% endblock %}

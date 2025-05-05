@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="restock-container">
+    <div class="restock-header">
+        <h1 class="restock-title">
+            <i class="fas fa-boxes"></i> Restock History
+        </h1>
+        <div class="header-actions">
+            <a href="{% url 'inventory_reports' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="restock-card">
+        <div class="table-responsive">
+            <table class="restock-table">
+                <thead>
+                    <tr>
+                        <th class="product-col">Product</th>
+                        <th class="supplier-col">Supplier</th>
+                        <th class="quantity-col">Quantity</th>
+                        <th class="date-col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for restock in restocks %}
+                    <tr class="restock-row">
+                        <td class="product-cell">
+                            <div class="product-info">
+                                {% if restock.product.image %}
+                                <img src="{{ restock.product.image.url }}" alt="{{ restock.product.name }}" class="product-thumb">
+                                {% endif %}
+                                <span>{{ restock.product.name }}</span>
+                            </div>
+                        </td>
+                        <td class="supplier-cell">
+                            <span class="supplier-badge">{{ restock.supplier.name }}</span>
+                        </td>
+                        <td class="quantity-cell">
+                            <span class="quantity-pill">{{ restock.quantity }}</span>
+                        </td>
+                        <td class="date-cell">
+                            <span class="date-badge">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ restock.restock_date|date:"M d, Y" }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-box-open"></i>
+                                <p>No restock records found</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Restock History Specific Styles */
+.restock-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #333;
+}
+
+.restock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.restock-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.back-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.restock-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.restock-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.restock-table thead {
+    background-color: #f8f9fa;
+}
+
+.restock-table th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: #5a6a7e;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.restock-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.restock-row:hover {
+    background-color: #f8fafc;
+}
+
+.product-cell {
+    min-width: 250px;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.product-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
+.supplier-badge {
+    background-color: #e8f4fd;
+    color: #2980b9;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.quantity-pill {
+    background-color: #e8f5e9;
+    color: #27ae60;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 40px;
+    text-align: center;
+}
+
+.date-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.empty-row td {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #95a5a6;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .restock-container {
+        padding: 1rem;
+    }
+    
+    .restock-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .restock-table th, 
+    .restock-table td {
+        padding: 0.75rem;
+    }
+    
+    .product-cell {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .restock-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .product-info {
+        min-width: 200px;
+    }
+}
+</style>
+{% endblock %}
