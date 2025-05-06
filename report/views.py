@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.db.models import Count, Avg, Max, Subquery, OuterRef, F, ExpressionWrapper, DurationField
 from django.db.models.functions import Coalesce
 from django.contrib import messages
-from inventory.models import Product, Sale, Restock, Supplier, Brand
+from inventory.models import Product, Sale, Restock, Supplier, Brand, ProductReturn
 
 def sales_reports(request):
 
@@ -163,3 +163,30 @@ def restock_product(request, product_id):
 
         return redirect('inventory_reports')
     return render(request, 'report/restock_product.html', {'product': product})
+
+def return_product(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product')
+        quantity = int(request.POST.get('quantity'))
+        reason = request.POST.get('reason', '')
+
+        product = get_object_or_404(Product, id=product_id)
+        
+        if quantity > product.quantity:
+            messages.error(request, f'Cannot return more than available quantity ({product.quantity})')
+            return redirect('return_product')
+
+        return_record = ProductReturn.objects.create(
+            product=product,
+            quantity_returned=quantity,
+            reason=reason,
+            supplier=product.supplier
+        )
+        
+        return_record.update_product_quantity()
+
+        messages.success(request, f'Successfully returned {quantity} units of {product.name}')
+        return redirect('inventory_reports')
+
+    products = Product.objects.all()
+    return render(request, 'report/return_product.html', {'products': products})
