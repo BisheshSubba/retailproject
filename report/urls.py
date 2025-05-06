@@ -7,4 +7,5 @@ urlpatterns = [
     path('restock/<int:product_id>/', views.restock_product, name='restock_product'),
     path('financial/', views.financial_reports, name='financial_reports'),
     path('supplier/', views.supplier_reports, name='supplier_reports'),
+    path('return/', views.return_product, name='return_product'),
 ]

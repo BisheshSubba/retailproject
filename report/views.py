@@ -65,11 +65,14 @@ def inventory_reports(request):
         except:
             product.last_restock_date = "Never"
     
+    recent_returns = ProductReturn.objects.select_related('product', 'supplier').order_by('-return_date')[:10]
+    
     context = {
         'products': products, 
         'low_stock': low_stock,
         'overstock': overstock,
         'categories': categories,
+        'recent_returns': recent_returns, 
     }
     return render(request, 'report/inventory_reports.html', context)
 
@@ -188,5 +191,13 @@ def return_product(request):
         messages.success(request, f'Successfully returned {quantity} units of {product.name}')
         return redirect('inventory_reports')
 
+    product_id = request.GET.get('product_id')
+    initial_product = None
+    if product_id:
+        initial_product = get_object_or_404(Product, id=product_id)
+
     products = Product.objects.all()
-    return render(request, 'report/return_product.html', {'products': products})
+    return render(request, 'report/return_product.html', {
+        'products': products,
+        'initial_product': initial_product
+    })

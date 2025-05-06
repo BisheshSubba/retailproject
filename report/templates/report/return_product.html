@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1><i class="fas fa-undo"></i> Return Product to Supplier</h1>
+    
+    <form method="POST" class="form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="product">Product</label>
+            <select name="product" id="product" class="form-control" required>
+                <option value="">Select a product</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" 
+                    {% if initial_product and product.id == initial_product.id %}selected{% endif %}>
+                    {{ product.name }} (Current: {{ product.quantity }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="quantity">Quantity to Return</label>
+            <input type="number" name="quantity" id="quantity" class="form-control" min="1" required
+                   {% if initial_product %}max="{{ initial_product.quantity }}"{% endif %}>
+            {% if initial_product %}
+            <small class="text-muted">Maximum available: {{ initial_product.quantity }}</small>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="reason">Reason (Optional)</label>
+            <textarea name="reason" id="reason" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Submit Return</button>
+        <a href="{% url 'inventory_reports' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+    }
+    .btn-primary {
+        background-color: #4361ee;
+        color: white;
+        border: none;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        margin-left: 1rem;
+    }
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.875rem;
+        display: block;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
