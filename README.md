@@ -1,30 +1,21 @@
 # Shoe Retail Management System
-
-![Retail System](https://img.shields.io/badge/Status-Production-ready-brightgreen)
-![Django](https://img.shields.io/badge/Framework-Django-092E20)
-![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1)
-
 A comprehensive information system for managing a shoe retail shop, built with Django and MySQL.
 
 ## Features
-
 ### 🏬 Inventory Management
 - Product catalog with detailed attributes
 - Stock level monitoring
 - Automatic low stock alerts
 - Overstock identification
-
 ### 💰 Sales Processing
 - Point of Sale (POS) interface
 - Receipt generation
 - Sales history tracking
-
 ### 📊 Reporting System
 - **Inventory Reports**: Stock levels, valuation
 - **Sales Reports**: Daily/weekly/monthly sales
 - **Financial Reports**: Profit/loss statements
 - **Supplier Reports**: Purchase history, performance
-
 ### 🚚 Supplier Management
 - Supplier database
 - Restocking workflow
