@@ -28,6 +28,7 @@ urlpatterns = [
     path('suppliers/', include('suppliers.urls')),
     path('sales/', include('sales.urls')),
     path('report/', include('report.urls')),
+    path('sales_data/<str:period>/', views.sales_data, name='sales_data'),
 ]
 
 urlpatterns+= static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

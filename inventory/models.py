@@ -18,6 +18,13 @@ class Brand(models.Model):
         ('New Balance', 'New Balance'),
         ('Vans', 'Vans'),
         ('Converse', 'Converse'),
+        ('Reebok','Reebok'),
+        ('Asics','Asics'),
+        ('Skechers','Sketchers'),
+        ('Jordan','Jordan'),
+        ('Fila','Fila'),
+        ('Timberland','Timberland'),
+        ('Dr. Martens','Dr. Martens')
     ]
     name = models.CharField(max_length=100, choices=BRAND_CHOICES, unique=True)
 
