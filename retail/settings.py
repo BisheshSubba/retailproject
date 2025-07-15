@@ -82,27 +82,23 @@ WSGI_APPLICATION = 'retail.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-ENVIRONMENT = config('ENVIRONMENT', default='development')
-
-if ENVIRONMENT == 'production':
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=config('RENDER_DATABASE_URL'),
-            conn_max_age=600,  # Optional: persistent connections
-            ssl_require=True   # Required for Render
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('LOCAL_DB_NAME'),
-            'USER': config('LOCAL_DB_USER'),
-            'PASSWORD': config('LOCAL_DB_PASSWORD'),
-            'HOST': config('LOCAL_DB_HOST', default='localhost'),
-            'PORT': config('LOCAL_DB_PORT', default='5432'),
-        }
-    }
+DATABASES = {
+    'default': dj_database_url.config(
+        default=config('RENDER_DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.postgresql',
+    #         'NAME': config('LOCAL_DB_NAME'),
+    #         'USER': config('LOCAL_DB_USER'),
+    #         'PASSWORD': config('LOCAL_DB_PASSWORD'),
+    #         'HOST': config('LOCAL_DB_HOST', default='localhost'),
+    #         'PORT': config('LOCAL_DB_PORT', default='5432'),
+    #     }
+    # }
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
