@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Sum, F, Count, Avg
+from django.db.models import Sum, F, Count, Avg, Value
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Count, Avg, Max, Subquery, OuterRef, F, ExpressionWrapper, DurationField
+from django.db.models import (
+    Sum, Count, Avg, Max, F, FloatField,
+    ExpressionWrapper, Subquery, OuterRef, StdDev
+)
+from django.http import JsonResponse
 from django.db.models.functions import Coalesce
 from django.contrib import messages
 from inventory.models import Product, Sale, Restock, Supplier, Brand, ProductReturn
@@ -33,6 +37,72 @@ def sales_reports(request):
         'time_period': time_period,
     }
     return render(request, 'report/sales_reports.html', context)
+
+def compare_products(request):
+    try:
+        product1_id = request.GET.get('product1')
+        product2_id = request.GET.get('product2')
+        
+        if not product1_id or not product2_id:
+            return JsonResponse({'error': 'Both product IDs are required'}, status=400)
+        
+        # Get time periods for stock movement chart (last 30 days)
+        time_periods = [(timezone.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30, -1, -1)]
+        
+        # Get data for product 1
+        product1 = get_object_or_404(Product, id=product1_id)
+        product1_data = get_product_comparison_data(product1, time_periods)
+        
+        # Get data for product 2
+        product2 = get_object_or_404(Product, id=product2_id)
+        product2_data = get_product_comparison_data(product2, time_periods)
+        
+        response_data = {
+            'product1': product1_data,
+            'product2': product2_data,
+            'time_periods': time_periods,
+        }
+        
+        return JsonResponse(response_data)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_product_comparison_data(product, time_periods):
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+
+    # Get actual sales data with correct Coalesce usage
+    sales_data = Sale.objects.filter(
+        product=product,
+        sale_date__gte=thirty_days_ago
+    ).aggregate(
+        total_sales=Coalesce(Sum('quantity_sold'), Value(0)),
+        total_revenue=Coalesce(
+            Sum(ExpressionWrapper(F('quantity_sold') * F('sale_price'), output_field=FloatField())),
+            Value(0.0)
+        ),
+        sales_count=Count('id')
+    )
+    
+    # Calculate sales velocity (units per day)
+    sales_velocity = sales_data['total_sales'] / 30 if sales_data['total_sales'] else 0
+    
+    # Stock history placeholder - implement actual tracking logic if needed
+    stock_history = []
+    for date_str in time_periods:
+        stock_history.append(product.quantity)  # Simplified example
+    
+    return {
+        'id': product.id,
+        'name': product.name,
+        'category': product.category,
+        'total_sales': sales_data['total_sales'],
+        'total_revenue': float(sales_data['total_revenue']),  # Convert Decimal to float
+        'sales_velocity': sales_velocity,
+        'stock_turnover': product.quantity / sales_velocity if sales_velocity > 0 else 0,
+        'profit_margin': float((product.price - product.cost_price) / product.price) if product.price > 0 else 0,
+        'stock_history': stock_history,
+    }
 
 def inventory_reports(request):
     products = Product.objects.select_related('supplier', 'brand').order_by('name')
@@ -116,21 +186,83 @@ def financial_reports(request):
         'profitable_products': profitable_products,
     }
     return render(request, 'report/financial_reports.html', context)
+
 def supplier_reports(request):
+    # Step 1: Calculate mean and std deviation for restocks and returns
+    stats = Supplier.objects.aggregate(
+        mean_restocks=Avg('restock__quantity'),
+        std_restocks=StdDev('restock__quantity'),
+        mean_returns=Avg('productreturn__quantity_returned'),
+        std_returns=StdDev('productreturn__quantity_returned'),
+    )
+
+    mean_restocks = stats['mean_restocks'] or 1
+    std_restocks = stats['std_restocks'] or 1
+    mean_returns = stats['mean_returns'] or 1
+    std_returns = stats['std_returns'] or 1
+
+    # Step 2: Annotate supplier performance using Composite Score (Z-Score logic)
     supplier_performance = Supplier.objects.annotate(
-        total_restocks=Subquery(
-            Restock.objects.filter(supplier=OuterRef('pk'))
-            .values('supplier')
-            .annotate(total=Sum('quantity'))
-            .values('total')[:1]
+        total_restocks=Coalesce(
+            Subquery(
+                Restock.objects.filter(supplier=OuterRef('pk'))
+                .values('supplier')
+                .annotate(total=Sum('quantity'))
+                .values('total')[:1]
+            ), 0
+        ),
+        total_returns=Coalesce(
+            Subquery(
+                ProductReturn.objects.filter(supplier=OuterRef('pk'))
+                .values('supplier')
+                .annotate(total=Sum('quantity_returned'))
+                .values('total')[:1]
+            ), 0
         ),
         total_products=Count('product', distinct=True),
-    ).order_by('-total_restocks')
+    ).annotate(
+        return_rate=ExpressionWrapper(
+            F('total_returns') * 100.0 / (F('total_restocks') + 1),
+            output_field=FloatField()
+        ),
+        z_restocks=ExpressionWrapper(
+            (F('total_restocks') - mean_restocks) / std_restocks,
+            output_field=FloatField()
+        ),
+        z_returns=ExpressionWrapper(
+            (F('total_returns') - mean_returns) / std_returns,
+            output_field=FloatField()
+        ),
+        z_return_rate=ExpressionWrapper(
+            (F('return_rate') - 10.0) / 15.0,  # Assume average return rate 10%, std dev 15%
+            output_field=FloatField()
+        ),
+        composite_score=ExpressionWrapper(
+            (F('z_restocks') * 1.0 -
+            F('z_returns') * 1.0 -
+            F('z_return_rate') * 1.0 +
+            F('total_products') * 0.5) * 10 + 50,  # Scale to 0-100 range
+            output_field=FloatField()
+        )
+    ).order_by('-composite_score')
 
+    # Step 3: Normalize the composite score to 0-100 for display
+    for supplier in supplier_performance:
+        # Ensure score is within reasonable bounds
+        supplier.performance_score = max(0, min(100, supplier.composite_score))
+
+    # Step 4: Supplier cost analysis
     supplier_cost_analysis = Supplier.objects.annotate(
         avg_price=Avg('product__cost_price'),
-        last_restock=Max('restock__restock_date')
-    ).annotate(
+        last_restock=Max('restock__restock_date'),
+        total_returns=Coalesce(
+            Subquery(
+                ProductReturn.objects.filter(supplier=OuterRef('pk'))
+                .values('supplier')
+                .annotate(total=Sum('quantity_returned'))
+                .values('total')[:1]
+            ), 0
+        ),
         top_brand=Subquery(
             Product.objects.filter(supplier=OuterRef('pk'))
             .values('brand__name')
@@ -139,6 +271,7 @@ def supplier_reports(request):
             .values('brand__name')[:1]
         )
     )
+
     context = {
         'supplier_performance': supplier_performance,
         'supplier_cost_analysis': supplier_cost_analysis,

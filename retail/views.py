@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from datetime import datetime, timedelta
-from django.db.models.functions import TruncMonth, TruncDay, TruncYear
+from django.db.models.functions import TruncDay, TruncMonth, TruncYear, TruncHour
 
 
 def home_view(request):
@@ -36,7 +36,6 @@ def sales_data(request, period):
                    .annotate(total_sales=Sum(F('quantity_sold') * F('sale_price'))) \
                    .order_by('date')
 
-    # Format dates properly for JSON serialization
     formatted_sales = []
     for sale in sales:
         formatted_sales.append({
@@ -46,6 +45,51 @@ def sales_data(request, period):
     
     return JsonResponse(formatted_sales, safe=False)
 
+def sales_detail(request, period, date):
+    try:
+        if period == 'day':
+            date_obj = datetime.strptime(date, '%Y-%m-%d').date()
+            start = datetime.combine(date_obj, datetime.min.time())
+            end = datetime.combine(date_obj, datetime.max.time())
+            sales = Sale.objects.filter(sale_date__range=(start, end)) \
+                       .annotate(time=TruncHour('sale_date')) \
+                       .values('time') \
+                       .annotate(total_sales=Sum(F('quantity_sold') * F('sale_price'))) \
+                       .order_by('time')
+            date_format = '%H:%M'
+        elif period == 'month':
+            year, month = map(int, date.split('-'))
+            start = datetime(year, month, 1)
+            if month == 12:
+                end = datetime(year + 1, 1, 1)
+            else:
+                end = datetime(year, month + 1, 1)
+            sales = Sale.objects.filter(sale_date__range=(start, end)) \
+                       .annotate(time=TruncDay('sale_date')) \
+                       .values('time') \
+                       .annotate(total_sales=Sum(F('quantity_sold') * F('sale_price'))) \
+                       .order_by('time')
+            date_format = '%Y-%m-%d'
+        elif period == 'year':
+            year = int(date)
+            start = datetime(year, 1, 1)
+            end = datetime(year + 1, 1, 1)
+            sales = Sale.objects.filter(sale_date__range=(start, end)) \
+                       .annotate(time=TruncMonth('sale_date')) \
+                       .values('time') \
+                       .annotate(total_sales=Sum(F('quantity_sold') * F('sale_price'))) \
+                       .order_by('time')
+            date_format = '%Y-%m'
+        
+        formatted_sales = [{
+            'period': sale['time'].strftime(date_format),
+            'total_sales': float(sale['total_sales']) if sale['total_sales'] else 0.0
+        } for sale in sales]
+        
+        return JsonResponse(formatted_sales, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def dashboard_view(request):
     # Basic metrics

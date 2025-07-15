@@ -1,86 +1,320 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<h1>Supplier Performance Reports</h1>
+<div class="supplierreport-container">
+    <div class="supplierreport-header">
+        <div class="supplierreport-header-text">
+            <h1 class="supplierreport-title">
+                <i class="fas fa-boxes"></i> Supplier Performance Report
+            </h1>
+            <p class="supplierreport-subtitle">
+                Comprehensive analysis of supplier performance metrics
+            </p>
+        </div>
+    </div>
 
-<div class="supplier-sections">
-    <section class="supplier-section">
-        <h2>Supplier Performance</h2>
-        <table class="table">
+    <div class="supplierreport-table-container">
+        <table class="supplierreport-table">
             <thead>
                 <tr>
-                    <th>Supplier</th>
-                    <th>Total Restocks</th>
-                    <th>Total Products</th>
-                    <th>Rating</th>
+                    <th class="supplierreport-supplier-col">Supplier</th>
+                    <th class="supplierreport-products-col">Total Products</th>
+                    <th class="supplierreport-restocks-col">Total Restocks</th>
+                    <th class="supplierreport-returns-col">Total Returns</th>
+                    <th class="supplierreport-rate-col">Return Rate</th>
+                    <th class="supplierreport-score-col">Performance Score</th>
                 </tr>
             </thead>
             <tbody>
                 {% for supplier in supplier_performance %}
-                <tr>
-                    <td>{{ supplier.name }}</td>
-                    <td>{{ supplier.total_restocks }}</td>
-                    <td>{{ supplier.total_products }}</td>
-                    <td>
-                        {% if supplier.total_restocks > 10 %}
-                            ★★★★★
-                        {% elif supplier.total_restocks > 5 %}
-                            ★★★★
-                        {% elif supplier.total_restocks > 0 %}
-                            ★★★
-                        {% else %}
-                            Not rated
-                        {% endif %}
+                <tr class="supplierreport-data-row">
+                    <td class="supplierreport-supplier-cell">
+                        {{ supplier.name }}
+                    </td>
+                    <td class="supplierreport-products-cell">
+                        {{ supplier.total_products }}
+                    </td>
+                    <td class="supplierreport-restocks-cell">
+                        {{ supplier.total_restocks }}
+                    </td>
+                    <td class="supplierreport-returns-cell">
+                        {{ supplier.total_returns }}
+                    </td>
+                    <td class="supplierreport-rate-cell">
+                        {{ supplier.return_rate|floatformat:2 }}%
+                    </td>
+                    <td class="supplierreport-score-cell {% if supplier.performance_score >= 80 %}performance-high{% elif supplier.performance_score >= 50 %}performance-medium{% else %}performance-low{% endif %}">
+                        {{ supplier.performance_score|floatformat:2 }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="supplierreport-empty-row">
+                    <td colspan="6">
+                        <div class="supplierreport-empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>No supplier performance data available</p>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </section>
+    </div>
 
-    <section class="supplier-section">
-        <h2>Supplier Cost Analysis</h2>
-        <table class="table">
+    <div class="supplierreport-divider">
+        <i class="fas fa-ellipsis-h"></i>
+    </div>
+
+    <h2 class="supplierreport-section-title">
+        <i class="fas fa-money-bill-wave"></i> Supplier Cost Analysis
+    </h2>
+
+    <div class="supplierreport-table-container">
+        <table class="supplierreport-table">
             <thead>
                 <tr>
-                    <th>Supplier</th>
-                    <th>Avg. Product Price</th>
-                    <th>Most Supplied Brand</th>
-                    <th>Last Restock Date</th>
+                    <th class="supplierreport-supplier-col">Supplier</th>
+                    <th class="supplierreport-cost-col">Average Cost Price</th>
+                    <th class="supplierreport-date-col">Last Restock</th>
+                    <th class="supplierreport-returns-col">Total Returns</th>
+                    <th class="supplierreport-brand-col">Top Brand</th>
                 </tr>
             </thead>
             <tbody>
                 {% for supplier in supplier_cost_analysis %}
-                <tr>
-                    <td>{{ supplier.name }}</td>
-                    <td>Rs {{ supplier.avg_price|floatformat:2 }}</td>
-                    <td>{{ supplier.top_brand|default:"N/A" }}</td>
-                    <td>{{ supplier.last_restock|date:"Y-m-d"|default:"N/A" }}</td>
+                <tr class="supplierreport-data-row">
+                    <td class="supplierreport-supplier-cell">
+                        {{ supplier.name }}
+                    </td>
+                    <td class="supplierreport-cost-cell">
+                        Rs {{ supplier.avg_price|floatformat:2 }}
+                    </td>
+                    <td class="supplierreport-date-cell">
+                        {% if supplier.last_restock %}
+                            {{ supplier.last_restock|date:"M d, Y" }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </td>
+                    <td class="supplierreport-returns-cell">
+                        {{ supplier.total_returns }}
+                    </td>
+                    <td class="supplierreport-brand-cell">
+                        <span class="supplierreport-brand-highlight">
+                            {% if supplier.top_brand %}
+                                {{ supplier.top_brand }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="supplierreport-empty-row">
+                    <td colspan="5">
+                        <div class="supplierreport-empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>No cost analysis data available</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </section>
+    </div>
 </div>
 
 <style>
-    .supplier-section {
-        margin-bottom: 2rem;
-        padding: 1rem;
-        border: 1px solid #eee;
-        border-radius: 5px;
+    .supplierreport-container {
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        color: #2d3748;
     }
-    .table {
+    
+    .supplierreport-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    
+    .supplierreport-header-text {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    .supplierreport-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #000000;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .supplierreport-title i {
+        font-size: 1.8rem;
+        color: #1a237e;
+    }
+    
+    .supplierreport-subtitle {
+        color: #4a5568;
+        margin-top: 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .supplierreport-section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 2rem 0 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .supplierreport-section-title i {
+        font-size: 1.3rem;
+        color: #1a237e;
+    }
+    
+    .supplierreport-divider {
+        text-align: center;
+        color: #cbd5e0;
+        margin: 2rem 0;
+        font-size: 1.2rem;
+    }
+    
+    .supplierreport-table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+        padding: 1px;
+        margin-bottom: 2rem;
+    }
+    
+    .supplierreport-table {
         width: 100%;
         border-collapse: collapse;
     }
-    .table th, .table td {
-        padding: 0.75rem;
+    
+    .supplierreport-table thead {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .supplierreport-table th {
+        padding: 1.25rem 1.5rem;
         text-align: left;
-        border-bottom: 1px solid #ddd;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .table th {
-        background-color: #f8f9fa;
+    
+    .supplierreport-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #edf2f7;
+        vertical-align: middle;
     }
-</style>
+    
+    .supplierreport-data-row:hover {
+        background-color: #f8fafc;
+    }
+    
+    .supplierreport-brand-highlight {
+        font-weight: 600;
+        color: #5a67d8;
+        position: relative;
+        padding-left: 0.75rem;
+    }
+    
+    .supplierreport-brand-highlight::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 16px;
+        background-color: #5a67d8;
+        border-radius: 2px;
+    }
+    
+    .supplierreport-empty-row td {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+    
+    .supplierreport-empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        color: #a0aec0;
+    }
+    
+    .supplierreport-empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.5;
+    }
+    
+    .supplierreport-empty-state p {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .performance-high {
+        color: #27ae60;
+        font-weight: bold;
+    }
+    
+    .performance-medium {
+        color: #f39c12;
+        font-weight: bold;
+    }
+    
+    .performance-low {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+    
+    @media (max-width: 992px) {
+        .supplierreport-container {
+            padding: 1.5rem 1rem;
+        }
+        
+        .supplierreport-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .supplierreport-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .supplierreport-title {
+            font-size: 1.7rem;
+        }
+        
+        .supplierreport-table th,
+        .supplierreport-table td {
+            padding: 1rem;
+        }
+    }
+    </style>
 {% endblock %}

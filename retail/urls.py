@@ -24,6 +24,8 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.dashboard_view, name='dashboard'),
+    path('sales_data/<str:period>/', views.sales_data, name='sales_data'),
+    path('sales_detail/<str:period>/<str:date>/', views.sales_detail, name='sales_detail'),
     path('inventory/', include('inventory.urls')),
     path('suppliers/', include('suppliers.urls')),
     path('sales/', include('sales.urls')),

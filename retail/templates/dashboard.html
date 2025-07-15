@@ -7,7 +7,6 @@
         <h1><i class="fas fa-chart-line"></i> Executive Dashboard</h1>
     </header>
 
-    <!-- Metric Summary -->
     <div class="metric-row">
         <div class="metric-card">
             <div class="metric-icon"><i class="fas fa-boxes"></i></div>
@@ -48,11 +47,18 @@
                 <option value="month" selected>Month</option>
                 <option value="year">Year</option>
             </select>
+            
+            <div id="searchContainer" style="display: inline-block; margin-left: 15px;">
+                <!-- Search input will be inserted here dynamically -->
+            </div>
+            <button id="searchBtn" class="btn btn-primary" style="margin-left: 10px;">Search</button>
+            <button id="resetBtn" class="btn btn-secondary" style="margin-left: 5px;">Reset</button>
         </div>
-        <canvas id="salesChart" width="800" height="300"></canvas>
+        
+        <canvas id="mainChart" width="800" height="300"></canvas>
+        <canvas id="detailChart" width="800" height="300" style="display: none;"></canvas>
     </div>
 
-<!-- Top 3 Best-Selling Shoes -->
 <h2 style="text-align:center; margin-top: 50px;">
     <i class="fas fa-crown"></i> Top Selling Products (All Time)
 </h2>
@@ -70,7 +76,6 @@
     </div>
 </div>
 
-    <!-- Recent Sales Table -->
     <div class="recent-sales">
         <h2><i class="fas fa-history"></i> Recent Sales</h2>
         <div class="scrollable-table">
@@ -98,53 +103,200 @@
     </div>
 </div>
 
-<!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let salesChart;
+    let mainChart, detailChart;
+    let currentPeriod = 'month';
 
-    function fetchSalesData(period) {
-        fetch(`/sales_data/${period}/`)
+    function updateSearchInput() {
+        const container = document.getElementById('searchContainer');
+        container.innerHTML = '';
+        
+        if (currentPeriod === 'day') {
+            container.innerHTML = `
+                <label for="searchInput" style="margin-right: 5px;">Search Day:</label>
+                <input type="date" id="searchInput" class="form-control" style="display: inline-block; width: auto;">
+            `;
+        } else if (currentPeriod === 'month') {
+            container.innerHTML = `
+                <label for="searchInput" style="margin-right: 5px;">Search Month:</label>
+                <input type="month" id="searchInput" class="form-control" style="display: inline-block; width: auto;">
+            `;
+        } else if (currentPeriod === 'year') {
+            container.innerHTML = `
+                <label for="searchInput" style="margin-right: 5px;">Search Year:</label>
+                <input type="number" id="searchInput" class="form-control" 
+                       min="2000" max="2100" style="display: inline-block; width: 100px;">
+            `;
+        }
+    }
+
+    function fetchMainChart() {
+        fetch(`/sales_data/${currentPeriod}/`)
             .then(response => response.json())
             .then(data => {
+                const ctx = document.getElementById('mainChart').getContext('2d');
                 const labels = data.map(item => item.sale_date);
                 const sales = data.map(item => item.total_sales);
 
-                const ctx = document.getElementById('salesChart').getContext('2d');
-
-                if (salesChart) {
-                    salesChart.destroy();
-                }
-
-                salesChart = new Chart(ctx, {
+                if (mainChart) mainChart.destroy();
+                
+                mainChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Sales (Rs)',
+                            label: `${currentPeriod === 'day' ? 'Daily' : currentPeriod === 'month' ? 'Monthly' : 'Yearly'} Sales`,
                             data: sales,
-                            fill: false,
                             borderColor: 'rgba(75, 192, 192, 1)',
-                            tension: 0.3
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.3,
+                            fill: true
                         }]
                     },
                     options: {
                         responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `${currentPeriod === 'day' ? 'Last 30 Days' : currentPeriod === 'month' ? 'Last 12 Months' : 'Yearly'} Sales Trend`
+                            }
+                        },
                         scales: {
-                            x: { title: { display: true, text: 'Date' }},
-                            y: { beginAtZero: true, title: { display: true, text: 'Sales' }}
+                            y: { 
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Sales Amount (Rs)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: currentPeriod === 'day' ? 'Date' : currentPeriod === 'month' ? 'Month' : 'Year'
+                                }
+                            }
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const label = mainChart.data.labels[index];
+                                fetchDetailData(label);
+                            }
                         }
                     }
                 });
-            });
+                
+                // Show main chart, hide detail chart
+                document.getElementById('mainChart').style.display = 'block';
+                document.getElementById('detailChart').style.display = 'none';
+            })
+            .catch(error => console.error('Error fetching main chart data:', error));
     }
 
-    document.getElementById('timeFrameSelector').addEventListener('change', function () {
-        fetchSalesData(this.value);
+    function fetchDetailData(date) {
+        fetch(`/sales_detail/${currentPeriod}/${date}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error('Error in detail data:', data.error);
+                    return;
+                }
+                
+                const ctx = document.getElementById('detailChart').getContext('2d');
+                const labels = data.map(item => item.period);
+                const sales = data.map(item => item.total_sales);
+
+                if (detailChart) detailChart.destroy();
+                
+                detailChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: currentPeriod === 'day' ? 'Hourly Sales' : 
+                                  currentPeriod === 'month' ? 'Daily Sales' : 'Monthly Sales',
+                            data: sales,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: currentPeriod === 'day' ? `Hourly Sales on ${date}` :
+                                      currentPeriod === 'month' ? `Daily Sales in ${date}` :
+                                      `Monthly Sales in ${date}`
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Sales Amount (Rs)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: currentPeriod === 'day' ? 'Hour' : currentPeriod === 'month' ? 'Day' : 'Month'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Hide main chart, show detail chart
+                document.getElementById('mainChart').style.display = 'none';
+                document.getElementById('detailChart').style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching detail data:', error));
+    }
+
+    // Event listeners
+    document.getElementById('timeFrameSelector').addEventListener('change', function() {
+        currentPeriod = this.value;
+        updateSearchInput();
+        fetchMainChart();
     });
 
-    // Load default graph
-    fetchSalesData('month');
+    document.getElementById('searchBtn').addEventListener('click', function() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && searchInput.value) {
+            // Format the date appropriately based on period
+            let searchValue = searchInput.value;
+            
+            if (currentPeriod === 'month' && searchValue.includes('-')) {
+                // For month input type, the value is already in YYYY-MM format
+                fetchDetailData(searchValue);
+            } else if (currentPeriod === 'day' && searchValue) {
+                // For date input type, the value is in YYYY-MM-DD format
+                fetchDetailData(searchValue);
+            } else if (currentPeriod === 'year' && searchValue) {
+                // For year input, just use the number
+                fetchDetailData(searchValue);
+            } else {
+                console.error('Invalid search input for current period');
+            }
+        }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        fetchMainChart();
+    });
+
+    // Initialize
+    updateSearchInput();
+    fetchMainChart();
 </script>
 
 <!-- Styles -->
