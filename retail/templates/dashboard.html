@@ -2,6 +2,12 @@
 {% load static %}
 
 {% block content %}
+<div class="ad-container">
+    <a href="https://merobazar-luex.onrender.com/landing_page/" class="ad-link" target="_blank">
+        <img src="{% static 'ads/banner.png' %}" 
+             alt="MeroBazar Promotion" class="ad-banner">
+    </a>
+</div>
 <div class="dashboard">
     <header class="dashboard-header">
         <h1><i class="fas fa-chart-line"></i> Executive Dashboard</h1>
@@ -500,5 +506,34 @@ td {
     .podium-spot { width: 100px; font-size: 14px; }
     .shoe-name { font-size: 14px; }
 }
+.ad-container {
+    width: 100%;
+    max-width: 1584px; /* Using your image width */
+    margin: 0 auto 30px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ad-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ad-link {
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ad-banner {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 400px; /* Adjust based on your image's aspect ratio */
+    object-fit: cover;
+}
+
 </style>
 {% endblock %}
